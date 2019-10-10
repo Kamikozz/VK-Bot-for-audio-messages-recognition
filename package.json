@@ -1,0 +1,24 @@
+{
+  "name": "vkbotforaudiomessages",
+  "version": "1.0.0",
+  "description": "VK Bot with Voice-To-Text Recognizer for audio messages",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition.git"
+  },
+  "keywords": [
+    "vk-bot",
+    "google-cloud-speech",
+    "vk-api"
+  ],
+  "author": "Alexey Shevchenko <kamikozz@mail.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition/issues"
+  },
+  "homepage": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition#readme"
+}
