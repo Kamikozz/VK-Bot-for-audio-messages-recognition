@@ -20,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition/issues"
   },
-  "homepage": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition#readme"
+  "homepage": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "cheerio": "^1.0.0-rc.3"
+  }
 }
