@@ -2,9 +2,9 @@
   "name": "vkbotforaudiomessages",
   "version": "1.0.0",
   "description": "VK Bot with Voice-To-Text Recognizer for audio messages",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
