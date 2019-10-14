@@ -23,6 +23,7 @@
   "homepage": "https://github.com/Kamikozz/VK-Bot-for-audio-messages-recognition#readme",
   "dependencies": {},
   "devDependencies": {
-    "cheerio": "^1.0.0-rc.3"
+    "cheerio": "^1.0.0-rc.3",
+    "cli-color": "^2.0.0"
   }
 }

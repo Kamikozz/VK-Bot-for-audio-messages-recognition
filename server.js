@@ -1,14 +1,25 @@
+// Coloring console.log()
+const clc = require('cli-color');
+
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
 
 const config = require('./credentials.json');
 
+// Predefine stylings for colored console.log()
+const err = clc.red.bold;
+const warn = clc.yellow;
+const n = clc.black.bgBlackBright;
+const ok = clc.green;
+const info = clc.bgRed;
+
 const server = http.createServer(function (req, res) {
   const ip = req.socket.remoteAddress;
   const port = req.socket.remotePort;
   console.error(
-    `Connection established from: ${ip}:${port}. To:${req.url}`);
+    ok(`Connection established from: `) + n(`${ip}: + ${port}`) +
+    ok('. To:') + n(req.url));
   // res.writeHead(200, { 'Content-Type': 'text/plain' });
   let txt = '';
   switch (req.url) {
@@ -29,13 +40,13 @@ const server = http.createServer(function (req, res) {
         req.on('end', () => {
           const type = req.headers['content-type'];
           if (type && type.indexOf('application/json') !== -1) {
-            console.error('Got: "application/json"');
+            console.error(info('Got: "application/json"'));
             let parsed;
             try {
               parsed = JSON.parse(data);
             } catch (error) {
               if (error.name === 'SyntaxError') {
-                console.error(error.message);
+                console.error(err(error.message));
                 responseWrapper.call(res, 'Invalid JSON format', 400);
                 return;
               }
@@ -63,7 +74,7 @@ const server = http.createServer(function (req, res) {
                       // }
                     }
                     https.get(options, (res) => {
-                      console.error(res.statusCode);
+                      console.error(info(res.statusCode));
                       // console.error('headers:', res.headers);
                       let data = '';
                       res.on('data', (chunk) => {
@@ -74,13 +85,13 @@ const server = http.createServer(function (req, res) {
                         console.log(data.toString());
                       });
                     }).on('error', (e) => {
-                      console.error(e.message);
+                      console.error(err(e.message));
                     });
                     return;
                 }
               } else {
                 responseWrapper.call(res, 'ok', 200);
-                console.error('Incorrect group_id');
+                console.error(info('Incorrect group_id'));
                 return;
               }
             }
