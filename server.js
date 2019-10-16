@@ -4,6 +4,7 @@ const clc = require('cli-color');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
+const cheerio = require('cheerio');
 
 const config = require('./credentials.js');
 
@@ -176,6 +177,25 @@ function vkAuth() {
     res.on('data', (chunk) => {
     });
     res.on('end', () => {
+      // <input type="hidden" name="ip_h" value="2fca03cc6dd90f8339">
+      // <input type="hidden" name="lg_h" value="6c8f2f0e00001a1da2">
+      const $ = cheerio.load(data);
+      $('form')
+        .filter((idx, el) => {
+          return el.attribs.id === 'quick_login_form' &&
+            el.attribs.method === 'POST';
+        })
+        .children()
+        .map((idx, el) => {
+          switch (el.attribs.name) {
+            case 'ip_h':
+              hashForm.ip_h = encodeURIComponent(el.attribs.value);
+              break;
+            case 'lg_h':
+              hashForm.lg_h = encodeURIComponent(el.attribs.value);
+              break;
+          }
+        });
     });
   })
     .on('error', (e) => {
