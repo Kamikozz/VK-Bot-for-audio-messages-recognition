@@ -21,7 +21,7 @@ const server = http.createServer(function (req, res) {
   const ip = req.socket.remoteAddress;
   const port = req.socket.remotePort;
   console.error(
-    ok(`Connection established from: `) + n(`${ip}: + ${port}`) +
+    ok(`Connection established from: `) + n(`${ip}:${port}`) +
     ok('. To:') + n(req.url));
   // res.writeHead(200, { 'Content-Type': 'text/plain' });
   let txt = '';
@@ -56,6 +56,7 @@ const server = http.createServer(function (req, res) {
             }
             console.log(parsed);
 
+            // VK.com requests
             if (parsed.type && parsed.group_id) {
               if (parsed.group_id === config.vk_group_id) {
                 switch (parsed.type) {
@@ -69,12 +70,7 @@ const server = http.createServer(function (req, res) {
                     const options = {
                       method: 'GET',
                       hostname: 'm.vk.com',
-                      path: '/',
-                      //port: process.env.PORT || 5000
-                      // headers: {
-                      //   'Content-Type': 'application/json',
-                      //   'Content-Length': data.length
-                      // }
+                      path: '/'
                     }
                     https.get(options, (res) => {
                       console.error(info(res.statusCode));
@@ -125,7 +121,8 @@ const server = http.createServer(function (req, res) {
       txt = '<h4>404 Not Found</h4>';
       responseWrapper.call(res, txt, 404, {
         'Content-Type': 'text/html; charset=UTF-8',
-        'Content-Length': Buffer.byteLength(txt)
+        'Content-Length': txt.length
+        //'Content-Length': Buffer.byteLength(txt)
       });
       break;
   }
