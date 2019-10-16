@@ -88,6 +88,19 @@ const server = http.createServer(function (req, res) {
                       console.error(err(e.message));
                     });
                     return;
+                  case 'auth':
+                    responseWrapper.call(res, 'ok', 200);
+                    if (!config.vk_auth_cookie) {
+                      console.log("Authenticating...");
+                      // Cookie must be set by calling this function
+                      vkAuth();
+                    }
+                    //console.log(config);
+                    return;
+                  case 'auth_clear':
+                    responseWrapper.call(res, 'ok', 200);
+                    config.vk_auth_cookie = '';
+                    return;
                 }
               } else {
                 responseWrapper.call(res, 'ok', 200);
@@ -122,4 +135,171 @@ function responseWrapper(message, statusCode, headers) {
   }
   if (message) this.write(message);
   this.end();
+}
+
+function vkAuth() {
+  let hashForm = {
+    'act': 'login',
+    'role': 'al_frame',
+    'expire': '',
+    'recaptcha': '',
+    'captcha_sid': '',
+    'captcha_key': '',
+    '_origin': encodeURIComponent('https://vk.com'),
+    'ip_h': '',
+    'lg_h': '',
+    'ul': '',
+    'email': encodeURIComponent(config.vk_user_login),
+    'pass': encodeURIComponent(config.vk_user_pass)
+  };
+
+  const options = {
+    method: 'GET',
+    hostname: 'vk.com',
+    path: '/',
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Connection': 'close',
+      'User-Agent': 'Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 77.0.3865.120 Safari / 537.36',
+      'Host': 'vk.com'
+    }
+  }
+  let resCookies;
+  // GET vk.com/ 
+  // to get 'ip_h' & 'lg_h' params from HTML <input>
+  https.get(options, (res) => {
+    console.error(info(res.statusCode));
+    console.error('headers:', res.headers);
+    resCookies = res.headers['set-cookie'];
+
+    let data = '';
+    res.on('data', (chunk) => {
+    });
+    res.on('end', () => {
+    });
+  })
+    .on('error', (e) => {
+      console.error(err(e.message));
+    })
+    .on('close', () => {
+      // POST login.vk.com/?act=login
+      console.log(resCookies);
+      const body = jsonEncode(hashForm);
+      const options = {
+        method: 'POST',
+        hostname: 'login.vk.com',
+        path: '/?act=login',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Connection': 'close',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': body.length,
+          'Cookie': resCookies,
+          'User-Agent': 'Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 77.0.3865.120 Safari / 537.36',
+          'Host': 'login.vk.com'
+        }
+      }
+      console.log(n('Request:'), options, body);
+      let locationTo = '';
+      const req = https.request(options, (res) => {
+        console.error(info(res.statusCode));
+        console.error('headers:', res.headers);
+        locationTo = new URL(res.headers.location);
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          console.log(data);
+        });
+      });
+      req.on('error', (e) => {
+        console.error(e);
+      });
+      req.write(body);
+      req.end();
+      req.on('close', () => {
+        // GET vk.com/login.php?act=slogin&to=&s=1&__q_hash=3ca3fa6a10ac7a4cb7ae7866c2d0ef60
+        // to get first cookies
+        const options = {
+          method: 'GET',
+          hostname: locationTo.host,
+          path: locationTo.pathname + locationTo.search,
+          headers: {
+            'Accept': '*/*',
+            'Cache-Control': 'no-cache',
+            'Connection': 'close',
+            'User-Agent': 'Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 77.0.3865.120 Safari / 537.36',
+            'Host': 'vk.com'
+          }
+        }
+        https.get(options, (res) => {
+          console.error(info(res.statusCode));
+          console.error('headers:', res.headers);
+          resCookies = res.headers['set-cookie'];
+
+          let data = '';
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+          res.on('end', () => {
+            // In response we get javascript file, with function
+            // .onLoginDone('/id1231212', {....})
+            // find substring between commas 
+            // by indexOf + shift=13 & lastIndexOf
+            const lengthOnLoginDone = 13;
+            locationTo = data.substring(
+              data.indexOf('onLoginDone') + lengthOnLoginDone,
+              data.lastIndexOf('\', {')
+            );
+            // Set found substring as 'vk_user_id' path
+            config.vk_user_id = locationTo;
+            console.log(locationTo);
+          });
+        })
+          .on('error', (e) => {
+            console.error(err(e.message));
+          })
+          .on('close', () => {
+            // GET vk.com/id12312321
+            // to get the actual page 
+            const options = {
+              method: 'GET',
+              hostname: 'vk.com',
+              path: locationTo,
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Connection': 'close',
+                'User-Agent': 'Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 77.0.3865.120 Safari / 537.36',
+                'Host': 'vk.com'
+              }
+            }
+            https.get(options, (res) => {
+              console.error(info(res.statusCode));
+              console.error('headers:', res.headers);
+              // Add new cookies to the existing array of cookies
+              resCookies += res.headers['set-cookie'];
+              // To prevent reauthorization
+              config.vk_auth_cookie = resCookies;
+
+              let data = '';
+              res.on('data', (chunk) => {
+              });
+              res.on('end', () => {
+              });
+            })
+              .on('error', (e) => {
+                console.error(err(e.message));
+              });
+          });
+      });
+    });
+}
+
+function jsonEncode(json) {
+  let _arr = [];
+  for (item in json) {
+    _arr.push(`${item}=${json[item]}`);
+  }
+  return _arr.join('&');
 }
