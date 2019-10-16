@@ -5,7 +5,7 @@ const https = require('https');
 const http = require('http');
 const fs = require('fs');
 
-const config = require('./credentials.json');
+const config = require('./credentials.js');
 
 // Predefine stylings for colored console.log()
 const err = clc.red.bold;
