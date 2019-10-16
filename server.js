@@ -4,6 +4,8 @@ const clc = require('cli-color');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
+const zlib = require('zlib');
+
 const cheerio = require('cheerio');
 
 const config = require('./credentials.js');
@@ -159,6 +161,8 @@ function vkAuth() {
     hostname: 'vk.com',
     path: '/',
     headers: {
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip, deflate',
       'Cache-Control': 'no-cache',
       'Connection': 'close',
       'User-Agent': 'Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 77.0.3865.120 Safari / 537.36',
@@ -175,6 +179,7 @@ function vkAuth() {
 
     let data = '';
     res.on('data', (chunk) => {
+      data += zlib.unzipSync(chunk);
     });
     res.on('end', () => {
       // <input type="hidden" name="ip_h" value="2fca03cc6dd90f8339">
@@ -210,6 +215,8 @@ function vkAuth() {
         hostname: 'login.vk.com',
         path: '/?act=login',
         headers: {
+          'Accept': '*/*',
+          'Accept-Encoding': 'gzip, deflate',
           'Cache-Control': 'no-cache',
           'Connection': 'close',
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -288,6 +295,8 @@ function vkAuth() {
               hostname: 'vk.com',
               path: locationTo,
               headers: {
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate',
                 'Cache-Control': 'no-cache',
                 'Connection': 'close',
                 'User-Agent': 'Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 77.0.3865.120 Safari / 537.36',
@@ -304,8 +313,10 @@ function vkAuth() {
 
               let data = '';
               res.on('data', (chunk) => {
+                data += zlib.unzipSync(chunk);
               });
               res.on('end', () => {
+                console.log(data);
               });
             })
               .on('error', (e) => {
